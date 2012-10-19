@@ -12,7 +12,7 @@
     "url": "https://github.com/icgood/flood.git"
   },
   "bin": {
-    "flood": "./lib/flood",
-    "flood-watch": "./lib/flood-watch"
+    "flood": "./bin/flood.js",
+    "flood-watch": "./bin/flood-watch.js"
   }
 }

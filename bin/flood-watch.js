@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // Copyright (c) 2012 Ian C. Good
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
