@@ -1,0 +1,18 @@
+{
+  "name": "flood",
+  "description": "Generic performance testing tool.",
+  "author": "Ian Good <ian.good@rackspace.com>",
+  "version": "0.1.0",
+  "engine": "node >= 0.8.0",
+  "preferGlobal": "true",
+  "license": "MIT",
+  "keywords": ["performance", "load"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/icgood/flood.git"
+  },
+  "bin": {
+    "flood": "./lib/flood",
+    "flood-watch": "./lib/flood-watch"
+  }
+}
