@@ -20,8 +20,7 @@
 // THE SOFTWARE.
 //
 
-var net = require('net'),
-    npm = require('npm');
+var net = require('net');
 
 var configFile = process.argv[2] || './config';
 var config = require(configFile);
@@ -30,7 +29,7 @@ var i;
 var clients = config.clients;
 var counter = 0, seenClients = 0, snapshots = 0;
 for (i=0; i<clients.length; i++) {
-  clients[i] = net.connect({host: clients[i], port: config.clientPort});
+  clients[i] = net.connect(config.clientPort, clients[i]);
   clients[i].on('data', function (data) {
     var clientCounter = parseInt(data);
     counter += clientCounter;
@@ -42,7 +41,7 @@ for (i=0; i<clients.length; i++) {
       if (++snapshots >= config.snapshots) {
         var i;
         for (i=0; i<clients.length; i++) {
-          clients[i].destroy();
+          clients[i].end();
         }
       }
     }
