@@ -22,8 +22,6 @@
 
 var net = require('net');
 
-require.paths.shift(process.cwd());
-
 var configFile = process.argv[2] || 'config.json';
 var config = require(configFile);
 
