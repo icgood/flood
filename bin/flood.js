@@ -30,37 +30,53 @@ var config = require(configFile);
 var worker = require(config.workerModule);
 
 function Counter() {
-  this.counter = null;
+  this.counters = {};
+  this.reset();
 }
+
+Counter.prototype.reset = function () {
+  var i;
+  for (i=0; i<worker.counters.length; i++) {
+    this.counters[worker.counters[i]] = 0;
+  }
+}
+
+Counter.prototype.add = function (counters) {
+  var i;
+  for (i=0; i<worker.counters.length; i++) {
+    this.counters[worker.counters[i]] += counters[worker.counters[i]];
+  }
+};
 
 Counter.prototype.initialize = function () {
   var self = this;
-  this.counter = 0;
+  this.reset();
   setInterval(function () {
-    process.send(self.counter);
-    self.counter = 0;
+    console.log(self.counters);
+    process.send(self.counters);
+    self.reset();
   }, config.interval);
 };
 
-Counter.prototype.increment = function () {
-  this.counter++;
+Counter.prototype.increment = function (name) {
+  this.counters[name]++;
 };
 
-function writeCounter(counter, sock) {
-  sock.write(counter+'\r\n');
-}
+Counter.prototype.write = function (sock) {
+  sock.write(JSON.stringify(this.counters)+'\r\n');
+};
 
 var seenWorkers = 0;
-var counter = 0;
+var mainCounters = new Counter();
 
 function createAgent(sock, numWorkers) {
   var worker = cluster.fork();
-  worker.on('message', function (count) {
+  worker.on('message', function (counters) {
     seenWorkers++;
-    counter += count;
+    mainCounters.add(counters);
     if (seenWorkers >= numWorkers) {
-      writeCounter(counter, sock);
-      counter = 0;
+      mainCounters.write(sock);
+      mainCounters.reset();
       seenWorkers = 0;
     }
   });

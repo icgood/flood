@@ -25,24 +25,42 @@ var net = require('net');
 var configFile = process.argv[2] || 'config.json';
 var config = require(configFile);
 
+function addCounters(c1, c2) {
+  var c2prop;
+  for (c2prop in c2) {
+    if (c2.hasOwnProperty(c2prop)) {
+      if (c1.hasOwnProperty(c2prop)) {
+        c1[c2prop] += c2[c2prop];
+      }
+      else {
+        c1[c2prop] = c2[c2prop];
+      }
+    }
+  }
+}
+
 var i;
+var currentSnapshot = 0;
+var snapshots = new Array(config.snapshots);
 var clients = config.clients;
-var counter = 0, seenClients = 0, snapshots = 0;
+var seenClients = 0;
+var counters = {};
 for (i=0; i<clients.length; i++) {
   clients[i] = net.connect(config.clientPort, clients[i]);
   clients[i].on('data', function (data) {
-    var clientCounter = parseInt(data);
-    counter += clientCounter;
+    var clientCounters = JSON.parse(data)
+    addCounters(counters, clientCounters);
     seenClients++;
     if (seenClients >= clients.length) {
-      console.log(counter);
-      counter = 0;
+      snapshots[currentSnapshot] = counters;
+      counters = {};
       seenClients = 0;
-      if (++snapshots >= config.snapshots) {
+      if (++currentSnapshot >= config.snapshots) {
         var i;
         for (i=0; i<clients.length; i++) {
           clients[i].end();
         }
+        console.log(JSON.stringify(snapshots));
       }
     }
   });

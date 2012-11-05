@@ -50,9 +50,8 @@ argument is a counter object.
 Initially, each worker thread should take any necessary setup and then call
 `counter.initialize()`. This will reset the counter to zero and start an
 interval timer. Every `interval` milliseconds, the timer will fire and report
-back how many times the worker thread called `counter.increment()` or
-`counter.errorIncrement()`. The `flood` process will sum each worker
-thread's counters.
+back how many times the worker thread called `counter.increment()`. The `flood`
+process will sum each worker thread's counters.
 
 The `flood` process's counter sum is reported to the connected socket.
 For example, if `interval` is 1000 milliseconds, there are 4 worker threads, 
@@ -90,12 +89,13 @@ A worker that simply counts how many times it can increment a counter may look
 like this:
 
     function ticker(counter) {
-      counter.increment();
+      counter.increment('myCounter');
       process.nextTick(function () {
         ticker(counter);
       });
     }
-    
+
+    exports.counters = ['myCounter'];
     exports.start = function (config, counter) {
       console.log('Initializing simple counter!');
       counter.initialize();
