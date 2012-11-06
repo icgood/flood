@@ -2,7 +2,7 @@
   "name": "flood",
   "description": "Generic performance testing tool.",
   "author": "Ian Good <ian.good@rackspace.com>",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "engine": "node >= 0.8.0",
   "preferGlobal": "true",
   "license": "MIT",

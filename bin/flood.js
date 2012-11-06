@@ -52,7 +52,6 @@ Counter.prototype.initialize = function () {
   var self = this;
   this.reset();
   setInterval(function () {
-    console.log(self.counters);
     process.send(self.counters);
     self.reset();
   }, config.interval);
