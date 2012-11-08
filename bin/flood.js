@@ -23,8 +23,6 @@
 var cluster = require('cluster'),
     os = require('os'),
     fs = require('fs'),
-    vm = require('vm'),
-    util = require('util'),
     net = require('net');
 
 var configFile = process.argv[2] || 'config.json';

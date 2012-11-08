@@ -20,7 +20,8 @@
 // THE SOFTWARE.
 //
 
-var net = require('net');
+var net = require('net'),
+    fs = require('fs');
 
 var configFile = process.argv[2] || 'config.json';
 var config = JSON.parse(fs.readFileSync(configFile));
