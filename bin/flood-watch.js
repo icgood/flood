@@ -23,7 +23,7 @@
 var net = require('net');
 
 var configFile = process.argv[2] || 'config.json';
-var config = require(configFile);
+var config = JSON.parse(fs.readFileSync(configFile));
 
 function addCounters(c1, c2) {
   var c2prop;

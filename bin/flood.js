@@ -22,12 +22,20 @@
 
 var cluster = require('cluster'),
     os = require('os'),
+    fs = require('fs'),
+    vm = require('vm'),
+    util = require('util'),
     net = require('net');
 
 var configFile = process.argv[2] || 'config.json';
-var config = require(configFile);
+var config = JSON.parse(fs.readFileSync(configFile));
 
-var worker = require(config.workerModule);
+try {
+  var worker = require(process.cwd()+'/'+config.workerModule);
+}
+catch (err) {
+  var worker = require(config.workerModule);
+}
 
 function Counter() {
   this.counters = {};
