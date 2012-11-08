@@ -22,11 +22,10 @@
 
 var cluster = require('cluster'),
     os = require('os'),
-    fs = require('fs'),
     net = require('net');
 
 var configFile = process.argv[2] || 'config.json';
-var config = JSON.parse(fs.readFileSync(configFile));
+var config = require(configFile);
 
 var worker = require(config.workerModule);
 

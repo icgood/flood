@@ -20,11 +20,10 @@
 // THE SOFTWARE.
 //
 
-var net = require('net'),
-    fs = require('fs');
+var net = require('net');
 
 var configFile = process.argv[2] || 'config.json';
-var config = JSON.parse(fs.readFileSync(configFile));
+var config = require(configFile);
 
 function addCounters(c1, c2) {
   var c2prop;
