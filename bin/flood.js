@@ -30,12 +30,7 @@ var cluster = require('cluster'),
 var configFile = process.argv[2] || 'config.json';
 var config = JSON.parse(fs.readFileSync(configFile));
 
-try {
-  var worker = require(process.cwd()+'/'+config.workerModule);
-}
-catch (err) {
-  var worker = require(config.workerModule);
-}
+var worker = require(config.workerModule);
 
 function Counter() {
   this.counters = {};
