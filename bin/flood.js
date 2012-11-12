@@ -22,29 +22,27 @@
 
 var cluster = require('cluster'),
     os = require('os'),
-    net = require('net');
+    vm = require('vm'),
+    http = require('http'),
+    url = require('url');
 
-var configFile = process.argv[2] || 'config.json';
-var config = require(configFile);
-
-var worker = require(config.workerModule);
-
-function Counter() {
+function Counter(names) {
+  this.names = names;
   this.counters = {};
   this.reset();
 }
 
 Counter.prototype.reset = function () {
   var i;
-  for (i=0; i<worker.counters.length; i++) {
-    this.counters[worker.counters[i]] = 0;
+  for (i=0; i<this.names.length; i++) {
+    this.counters[this.names[i]] = 0;
   }
-}
+};
 
 Counter.prototype.add = function (counters) {
   var i;
   for (i=0; i<worker.counters.length; i++) {
-    this.counters[worker.counters[i]] += counters[worker.counters[i]];
+    this.counters[this.names[i]] += counters[this.names[i]];
   }
 };
 
@@ -61,59 +59,49 @@ Counter.prototype.increment = function (name) {
   this.counters[name]++;
 };
 
-Counter.prototype.write = function (sock) {
-  sock.write(JSON.stringify(this.counters)+'\r\n');
-};
-
-var seenWorkers = 0;
-var mainCounters = new Counter();
-
-function createAgent(sock, numWorkers) {
-  var worker = cluster.fork();
-  worker.on('message', function (counters) {
-    seenWorkers++;
-    mainCounters.add(counters);
-    if (seenWorkers >= numWorkers) {
-      mainCounters.write(sock);
-      mainCounters.reset();
-      seenWorkers = 0;
-    }
-  });
-  return worker;
+function startTest(options, res) {
 }
 
 if (cluster.isMaster) {
-  var numWorkers = config.numWorkers > 0 ? config.numWorkers :
-                   os.cpus().length + config.numWorkers;
-  var workers = [];
-  net.createServer(function (sock) {
-    while (workers.length < numWorkers) {
-      workers.push(createAgent(sock, numWorkers));
+  http.createServer(function (req, res) {
+    if (req.method !== 'POST') {
+      res.writeHead(404);
+      res.end();
+      return;
     }
-    sock.on('end', function () {
-      var i;
-      for (i=0; i<workers.length; i++) {
-        workers[i].destroy();
-      }
-      workers = [];
+    if (req.headers['content-type'] !== 'text/javascript') {
+      res.writeHead(415);
+      res.end();
+      return;
+    }
+    var fileParts = [];
+    req.on('data', function (buf) {
+      fileParts.push(buf);
     });
-  }).listen(config.clientPort);
-
-  cluster.on('exit', function(worker, code, signal) {
-    if (!worker.suicide) {
-      console.log('worker ' + worker.process.pid + ' died');
-      var i;
-      for (i=0; i<workers.length; i++) {
-        if (workers[i] == worker) {
-          workers[i] = createAgent(sock, numWorkers);
-        }
-      }
-    }
-  });
+    req.on('end', function () {
+      var numWorkers = req.headers['x-workers'] || 0;
+      var options = {
+        filename: url.parse(req.url).pathname,
+        snapshots: req.headers['x-snapshots'] || 10,
+        snapshotLength: req.headers['x-snapshot-length'] || 1000,
+        workers: numWorkers > 0 ? numWorkers : os.cpus().length + numWorkers,
+        file: fileParts.join(''),
+      };
+      startTest(options, res);
+    });
+  }).listen(5143);
 }
 else {
-  var counter = new Counter();
-  worker.start(config, counter);
+  process.on('message', function (options) {
+    var sandbox = {
+      counters: [],
+      setUp: null,
+      run: null,
+      tearDown: null,
+    };
+    vm.runInNewContext(options.file, sandbox, options.filename);
+
+  });
 }
 
 // vim:ft=javascript:et:sw=2:ts=2:sts=2:
