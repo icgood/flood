@@ -20,50 +20,55 @@
 // THE SOFTWARE.
 //
 
-var net = require('net');
+var http = require('http'),
+    fs = require('fs'),
+    path = require('path');
+
+var snapshots = require('../lib/snapshots');
 
 var configFile = process.argv[2] || 'config.json';
-var config = require(configFile);
+var config = JSON.parse(fs.readFileSync(configFile));
 
-function addCounters(c1, c2) {
-  var c2prop;
-  for (c2prop in c2) {
-    if (c2.hasOwnProperty(c2prop)) {
-      if (c1.hasOwnProperty(c2prop)) {
-        c1[c2prop] += c2[c2prop];
-      }
-      else {
-        c1[c2prop] = c2[c2prop];
-      }
+var received = 0;
+var total = new snapshots.Snapshots();
+function runClient(host) {
+  var req = http.request({
+    host: host,
+    port: config.clientPort,
+    method: 'POST',
+    path: '/test/'+path.basename(config.workerModule),
+    headers: {
+      'Content-Length': code.length,
+      'Content-Type': 'text/javascript',
+      'X-Snapshots': config.snapshots,
+      'X-Snapshot-Length': config.interval,
+      'X-Workers': config.numWorkers,
+    },
+  }, function (res) {
+    if (res.statusCode === 200) {
+      var parts = [];
+      res.on('data', function (buf) {
+        parts.push(buf);
+      });
+      res.on('end', function () {
+        var data = JSON.parse(parts.join(''));
+        total.add(snapshots.fromJSON(data));
+        if (++received >= config.clients.length) {
+          console.log(JSON.stringify(total));
+        }
+      });
     }
-  }
+    else {
+      console.log('ERROR: '+res.statusCode);
+    }
+  });
+  req.end(code);
 }
 
 var i;
-var currentSnapshot = 0;
-var snapshots = new Array(config.snapshots);
-var clients = config.clients;
-var seenClients = 0;
-var counters = {};
-for (i=0; i<clients.length; i++) {
-  clients[i] = net.connect(config.clientPort, clients[i]);
-  clients[i].on('data', function (data) {
-    var clientCounters = JSON.parse(data)
-    addCounters(counters, clientCounters);
-    seenClients++;
-    if (seenClients >= clients.length) {
-      snapshots[currentSnapshot] = counters;
-      counters = {};
-      seenClients = 0;
-      if (++currentSnapshot >= config.snapshots) {
-        var i;
-        for (i=0; i<clients.length; i++) {
-          clients[i].end();
-        }
-        console.log(JSON.stringify(snapshots));
-      }
-    }
-  });
+var code = fs.readFileSync(config.workerModule);
+for (i=0; i<config.clients.length; i++) {
+  runClient(config.clients[i]);
 }
 
 // vim:et:sw=2:ts=2:sts=2:

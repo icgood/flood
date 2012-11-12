@@ -22,86 +22,75 @@
 
 var cluster = require('cluster'),
     os = require('os'),
-    vm = require('vm'),
     http = require('http'),
-    url = require('url');
+    url = require('url'),
+    path = require('path');
 
-function Counter(names) {
-  this.names = names;
-  this.counters = {};
-  this.reset();
-}
+var snapshots = require('../lib/snapshots');
 
-Counter.prototype.reset = function () {
-  var i;
-  for (i=0; i<this.names.length; i++) {
-    this.counters[this.names[i]] = 0;
-  }
-};
-
-Counter.prototype.add = function (counters) {
-  var i;
-  for (i=0; i<worker.counters.length; i++) {
-    this.counters[this.names[i]] += counters[this.names[i]];
-  }
-};
-
-Counter.prototype.initialize = function () {
-  var self = this;
-  this.reset();
-  setInterval(function () {
-    process.send(self.counters);
-    self.reset();
-  }, config.interval);
-};
-
-Counter.prototype.increment = function (name) {
-  this.counters[name]++;
-};
+cluster.setupMaster({
+  exec: __dirname+'/../lib/worker.js',
+});
 
 function startTest(options, res) {
-}
-
-if (cluster.isMaster) {
-  http.createServer(function (req, res) {
-    if (req.method !== 'POST') {
-      res.writeHead(404);
-      res.end();
-      return;
-    }
-    if (req.headers['content-type'] !== 'text/javascript') {
-      res.writeHead(415);
-      res.end();
-      return;
-    }
-    var fileParts = [];
-    req.on('data', function (buf) {
-      fileParts.push(buf);
+  var i;
+  var total = new snapshots.Snapshots();
+  var running = options.workers;
+  for (i=0; i<options.workers; i++) {
+    var worker = cluster.fork();
+    worker.send(options)
+    worker.on('message', function (msg) {
+      var workerSnapshots = snapshots.fromJSON(msg);
+      total.add(workerSnapshots);
+      if (--running <= 0) {
+        cluster.disconnect();
+        res.writeHead(200);
+        res.end(JSON.stringify(total)+'\n');
+      }
     });
-    req.on('end', function () {
-      var numWorkers = req.headers['x-workers'] || 0;
-      var options = {
-        filename: url.parse(req.url).pathname,
-        snapshots: req.headers['x-snapshots'] || 10,
-        snapshotLength: req.headers['x-snapshot-length'] || 1000,
-        workers: numWorkers > 0 ? numWorkers : os.cpus().length + numWorkers,
-        file: fileParts.join(''),
-      };
-      startTest(options, res);
-    });
-  }).listen(5143);
-}
-else {
-  process.on('message', function (options) {
-    var sandbox = {
-      counters: [],
-      setUp: null,
-      run: null,
-      tearDown: null,
-    };
-    vm.runInNewContext(options.file, sandbox, options.filename);
+  }
 
+  cluster.on('exit', function (worker, code, signal) {
+    if (!worker.suicide) {
+      cluster.disconnect();
+      res.writeHead(500);
+      res.end('Worker '+worker.process.pid+' died: '+signal+'\n');
+    }
   });
 }
+
+http.createServer(function (req, res) {
+  if (req.method !== 'POST') {
+    res.writeHead(404);
+    res.end();
+    return;
+  }
+  if (req.headers['content-type'] !== 'text/javascript') {
+    res.writeHead(415);
+    res.end();
+    return;
+  }
+  var urlpath = url.parse(req.url).pathname;
+  if (path.dirname(urlpath) !== '/test') {
+    res.writeHead(404);
+    res.end();
+    return;
+  }
+  var fileParts = [];
+  req.on('data', function (buf) {
+    fileParts.push(buf);
+  });
+  req.on('end', function () {
+    var numWorkers = req.headers['x-workers'] || 0;
+    var options = {
+      filename: path.basename(urlpath),
+      snapshots: req.headers['x-snapshots'] || 10,
+      snapshotLength: req.headers['x-snapshot-length'] || 1000,
+      workers: numWorkers > 0 ? numWorkers : os.cpus().length + numWorkers,
+      file: fileParts.join(''),
+    };
+    startTest(options, res);
+  });
+}).listen(5143);
 
 // vim:ft=javascript:et:sw=2:ts=2:sts=2:

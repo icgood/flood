@@ -15,5 +15,6 @@
   "bin": {
     "flood": "./bin/flood.js",
     "flood-watch": "./bin/flood-watch.js"
-  }
+  },
+  "main": "./lib"
 }
