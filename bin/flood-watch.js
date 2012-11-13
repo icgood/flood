@@ -29,10 +29,12 @@ var snapshots = require('../lib/snapshots');
 var configFile = process.argv[2] || 'config.json';
 var config = JSON.parse(fs.readFileSync(configFile));
 
-var received = 0;
+var code = fs.readFileSync(config.workerModule);
+
 var total = new snapshots.Snapshots();
+var received = 0;
 function runClient(host) {
-  var req = http.request({
+  http.request({
     host: host,
     port: config.clientPort,
     method: 'POST',
@@ -61,12 +63,10 @@ function runClient(host) {
     else {
       console.log('ERROR: '+res.statusCode);
     }
-  });
-  req.end(code);
+  }).end(code);
 }
 
 var i;
-var code = fs.readFileSync(config.workerModule);
 for (i=0; i<config.clients.length; i++) {
   runClient(config.clients[i]);
 }
