@@ -24,42 +24,49 @@ Configuration
 ### `flood`
 
 Machines that will actually generate the load by spawning worker threads will
-be running the `flood` command, passing a single argument with the filepath to
-a JSON configuration file. This file will look something like this:
+be running the `flood` command. This service listens for jobs and executes
+them. An HTTP-like listener is opened on port 5143, where clients may submit
+jobs and wait for completion. Here is an example in curl:
 
-    {
-      "clientPort": 5143,
-      "workerModule": "dummy",
-      "numWorkers": 0,
-      "interval", 1000
-    }
+    curl -i -X POST \
+        -H 'Content-Type: text/javascript' \
+        -d @mytest.js \
+        http://localhost:5143/test/mytest.js
 
-The process will listen on `clientPort` for incoming connections. When a
-connection is received, it spawns a number of threads defined by `numWorkers`.
-If `numWorkers` is positive, that many threads are created. If it is zero, it
-creates one thread for each CPU (or CPU core). Numbers less-than zero will be
-added to the number of CPUs to determine the number of threads (e.g. setting
--1 when 4 CPU cores are available will spawn 3 threads).
+The test file `mytest.js` simply needs to define `exports.counters` and
+`exports.run`. The `exports.counters` is an array of counter names the test can
+then increment. The `exports.run` is a function that is called which should run
+indefinitely, incrementing counters.
 
-Each worker thread will load `workerModule`, which must export a
-`start(config, counter)` function. The first argument passed in to `start` is
-the config object as loaded from the config file, so you can add your own
-worker configuration directly alongside `flood` configuration. The second
-argument is a counter object.
+    exports.counters = ['beeps'];
 
-Initially, each worker thread should take any necessary setup and then call
-`counter.initialize()`. This will reset the counter to zero and start an
-interval timer. Every `interval` milliseconds, the timer will fire and report
-back how many times the worker thread called `counter.increment()`. The `flood`
-process will sum each worker thread's counters.
+    exports.run = function (counters) {
+      function beep() {
+        counters.counterInc('beeps');
+        process.nextTick(beep);
+      }
+      beep();
+    };
 
-The `flood` process's counter sum is reported to the connected socket.
-For example, if `interval` is 1000 milliseconds, there are 4 worker threads, 
-and each worker thread performs exactly 150 counter increments per second, then
-`600` would echo to the connected socket every second.
+Optionally, `exports.setUp` may be a function that initializes the test, before
+snapshot timers begin. It must call its `callback` argument when complete.
+Additional arguments passed to `callback` will be given to `exports.run`:
 
-The `flood` process will **only** generate load while it has a socket
-connection.
+    exports.counters = ['beeps'];
+
+    exports.setUp = function (callback) {
+      require('fs').readFile('beeps.txt', function (err, beepsData) {
+        callback(beepsData);
+      }
+    };
+
+    exports.run = function (counters, beepsData) {
+      function beep() {
+        counters.counterInc('beeps');
+        process.nextTick(beep);
+      }
+      beep();
+    };
 
 ### `flood-watch`
 
@@ -69,40 +76,31 @@ with the JSON configuration file is passed to `flood-watch`, which looks
 something like this:
 
     {
-      "clientPort": 5143,
       "clients": [
-        "127.0.0.1"
+        "localhost"
       ],
       "snapshots": 10,
+      "interval": 1000,
+      "workerModule": "beeps.js",
+      "numWorkers": 0
     }
 
-It will initiate a socket connection to every client listed in `clients` on the
-port given by `clientPort`. Once a count is received from each client, they are
-summed and the result is printed to standard output. Once this occurs a number
-of times given by `snapshots`, the client socket connections are ended and the
-process ends.
+The options are:
 
-Example Worker
-==============
+ * *`clients`*: A socket connection is initiated to the `flood` service on each
+   host in the list to run the test.
 
-A worker that simply counts how many times it can increment a counter may look
-like this:
+ * *`snapshots`*: Number of counter snapshots to gather for the test.
+   Corresponds to the `X-Snapshots` header to the `flood` service.
 
-    function ticker(counter) {
-      counter.increment('myCounter');
-      process.nextTick(function () {
-        ticker(counter);
-      });
-    }
+ * *`interval`*: The length, in milliseconds, of each snapshot window. The
+   entire run-length of the test is given by `interval * snapshots`.
+   Corresponds to the `X-Snapshot-Length` header.
 
-    exports.counters = ['myCounter'];
-    exports.start = function (config, counter) {
-      console.log('Initializing simple counter!');
-      counter.initialize();
-      ticker(counter);
-    };
+ * *`workerModule`*: This file is read in and passed to the `flood` service as
+   the test file.
 
-More advanced workers simply need to do any initialization before calling
-`counter.initialize()` and then call `counter.increment()` after every
-iteration of work.
+ * *`numworkers`*: The number of worker threads created by each machine running
+   the `flood` service. Positive numbers indicate an exact number of threads,
+   while zero and negatives will subtract from the number of CPU cores.
 
