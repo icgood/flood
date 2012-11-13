@@ -12,9 +12,13 @@
     "type": "git",
     "url": "https://github.com/icgood/flood.git"
   },
+  "files": {
+    "flood-config": "etc/flood.conf.json"
+  },
   "bin": {
     "flood": "./bin/flood.js",
-    "flood-watch": "./bin/flood-watch.js"
+    "flood-watch": "./bin/flood-watch.js",
+    "flood-genkeys": "./bin/flood-genkeys.sh"
   },
   "main": "./lib"
 }

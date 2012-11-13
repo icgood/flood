@@ -21,16 +21,27 @@
 //
 
 var cluster = require('cluster'),
+    crypto = require('crypto'),
     os = require('os'),
+    fs = require('fs'),
     http = require('http'),
     url = require('url'),
     path = require('path');
 
 var snapshots = require('../lib/snapshots');
 
+var configFile = process.argv[2] || __dirname+'/../etc/flood.conf.json';
+var config = JSON.parse(fs.readFileSync(configFile));
+
 cluster.setupMaster({
   exec: __dirname+'/../lib/worker.js',
 });
+
+var pubkeyFile = config.publicKeyFile;
+var pubkey = fs.readFileSync(pubkeyFile);
+var signalg = config.signatureAlgorithm;
+
+var urlPrefix = config.urlPrefix;
 
 function killAll(workers) {
   var i;
@@ -79,16 +90,23 @@ http.createServer(function (req, res) {
     return;
   }
   var urlpath = url.parse(req.url).pathname;
-  if (path.dirname(urlpath) !== '/test') {
+  if (path.dirname(urlpath) !== urlPrefix) {
     res.writeHead(404);
     res.end();
     return;
   }
   var fileParts = [];
+  var verifier = crypto.createVerify(signalg);
   req.on('data', function (buf) {
+    verifier.update(buf);
     fileParts.push(buf);
   });
   req.on('end', function () {
+    if (!verifier.verify(pubkey, req.headers['x-signature'], 'base64')) {
+      res.writeHead(401);
+      res.end('X-Signature header was not a valid content signature.\n');
+      return;
+    }
     var numWorkers = parseInt(req.headers['x-workers'] || 0);
     var options = {
       filename: path.basename(urlpath),
@@ -99,6 +117,6 @@ http.createServer(function (req, res) {
     };
     startTest(options, res);
   });
-}).listen(5143);
+}).listen(config.clientPort);
 
 // vim:ft=javascript:et:sw=2:ts=2:sts=2:

@@ -1,0 +1,6 @@
+{
+  "clientPort": 5143,
+  "urlPrefix": "/test",
+  "publicKeyFile": "/etc/flood/public.pem",
+  "signatureAlgorithm": "RSA-SHA256"
+}

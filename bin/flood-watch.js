@@ -21,6 +21,7 @@
 //
 
 var http = require('http'),
+    crypto = require('crypto'),
     fs = require('fs'),
     path = require('path');
 
@@ -30,6 +31,11 @@ var configFile = process.argv[2] || 'config.json';
 var config = JSON.parse(fs.readFileSync(configFile));
 
 var code = fs.readFileSync(config.workerModule);
+var privkey = fs.readFileSync(config.privateKeyFile);
+
+var signer = crypto.createSign('RSA-SHA256');
+signer.update(code);
+var signature = signer.sign(privkey, 'base64');
 
 var total = new snapshots.Snapshots();
 var received = 0;
@@ -42,6 +48,7 @@ function runClient(host) {
     headers: {
       'Content-Length': code.length,
       'Content-Type': 'text/javascript',
+      'X-Signature': signature,
       'X-Snapshots': config.snapshots,
       'X-Snapshot-Length': config.interval,
       'X-Workers': config.numWorkers,
