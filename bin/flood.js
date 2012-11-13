@@ -32,18 +32,26 @@ cluster.setupMaster({
   exec: __dirname+'/../lib/worker.js',
 });
 
+function killAll(workers) {
+  var i;
+  for (i=0; i<workers.length; i++) {
+    workers[i].destroy();
+  }
+}
+
 function startTest(options, res) {
   var i;
   var total = new snapshots.Snapshots();
   var running = options.workers;
+  var workers = new Array(options.workers);
   for (i=0; i<options.workers; i++) {
-    var worker = cluster.fork();
-    worker.send(options)
-    worker.on('message', function (msg) {
+    workers[i] = cluster.fork();
+    workers[i].send(options)
+    workers[i].on('message', function (msg) {
       var workerSnapshots = snapshots.fromJSON(msg);
       total.add(workerSnapshots);
       if (--running <= 0) {
-        cluster.disconnect();
+        killAll(workers);
         res.writeHead(200);
         res.end(JSON.stringify(total)+'\n');
       }
@@ -52,7 +60,7 @@ function startTest(options, res) {
 
   cluster.on('exit', function (worker, code, signal) {
     if (!worker.suicide) {
-      cluster.disconnect();
+      killAll(workers);
       res.writeHead(500);
       res.end('Worker '+worker.process.pid+' died: '+signal+'\n');
     }
@@ -81,7 +89,7 @@ http.createServer(function (req, res) {
     fileParts.push(buf);
   });
   req.on('end', function () {
-    var numWorkers = req.headers['x-workers'] || 0;
+    var numWorkers = parseInt(req.headers['x-workers'] || 0);
     var options = {
       filename: path.basename(urlpath),
       snapshots: req.headers['x-snapshots'] || 10,
