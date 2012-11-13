@@ -87,20 +87,21 @@ something like this:
 
 The options are:
 
- * *`clients`*: A socket connection is initiated to the `flood` service on each
+ * `clients`: A socket connection is initiated to the `flood` service on each
    host in the list to run the test.
 
- * *`snapshots`*: Number of counter snapshots to gather for the test.
+ * `snapshots`: Number of counter snapshots to gather for the test.
    Corresponds to the `X-Snapshots` header to the `flood` service.
 
- * *`interval`*: The length, in milliseconds, of each snapshot window. The
+ * `interval`: The length, in milliseconds, of each snapshot window. The
    entire run-length of the test is given by `interval * snapshots`.
    Corresponds to the `X-Snapshot-Length` header.
 
- * *`workerModule`*: This file is read in and passed to the `flood` service as
+ * `workerModule`: This file is read in and passed to the `flood` service as
    the test file.
 
- * *`numworkers`*: The number of worker threads created by each machine running
+ * `numworkers`: The number of worker threads created by each machine running
    the `flood` service. Positive numbers indicate an exact number of threads,
    while zero and negatives will subtract from the number of CPU cores.
+   Corresponds to the `X-Workers` header.
 
