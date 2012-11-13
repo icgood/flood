@@ -22,6 +22,8 @@
 
 var cluster = require('cluster'),
     crypto = require('crypto'),
+    assert = require('assert'),
+    npm = require('npm'),
     os = require('os'),
     fs = require('fs'),
     http = require('http'),
@@ -48,6 +50,21 @@ function killAll(workers) {
   for (i=0; i<workers.length; i++) {
     workers[i].destroy();
   }
+}
+
+function installDeps(deps, callback) {
+  if (!deps || deps.length === 0) {
+    process.nextTick(callback);
+    return;
+  }
+
+  npm.load({loglevel: 'warn'}, function (err, npm) {
+    assert.ifError(err);
+    npm.commands.install(deps, function (err) {
+      assert.ifError(err);
+      process.nextTick(callback);
+    });
+  });
 }
 
 function startTest(options, res) {
@@ -115,7 +132,11 @@ http.createServer(function (req, res) {
       workers: numWorkers > 0 ? numWorkers : os.cpus().length + numWorkers,
       file: fileParts.join(''),
     };
-    startTest(options, res);
+
+    var deps = JSON.parse(req.headers['x-dependencies'] || null);
+    installDeps(deps, function () {
+      startTest(options, res);
+    });
   });
 }).listen(config.clientPort);
 

@@ -52,6 +52,7 @@ function runClient(host) {
       'X-Snapshots': config.snapshots,
       'X-Snapshot-Length': config.interval,
       'X-Workers': config.numWorkers,
+      'X-Dependencies': JSON.stringify(config.dependencies || null),
     },
   }, function (res) {
     if (res.statusCode === 200) {
