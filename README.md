@@ -1,4 +1,3 @@
-
 About
 =====
 
@@ -68,6 +67,18 @@ Additional arguments passed to `callback` will be given to `exports.run`:
       beep();
     };
 
+The service configuration file, `flood.conf.json`, is installed into the
+`etc` directory of the node package (likely `/usr/lib/node_modules/flood/`).
+This file has several options:
+
+ * `clientPort`: The port to listen for connections on.
+
+ * `urlPrefix`: The expected prefix for every POST, without trailing slash.
+
+ * `publicKeyFile`: The public key file used to verify digital signatures of
+   incoming test scripts. Must correspond to the `privateKeyFile` option
+   given in `flood-watch` configuration.
+
 ### `flood-watch`
 
 The intention of the `flood-watch` process is to connect to all the `flood`
@@ -79,6 +90,8 @@ something like this:
       "clients": [
         "localhost"
       ],
+      "dependencies": [],
+      "privateKeyFile": "/etc/flood/private.pem",
       "snapshots": 10,
       "interval": 1000,
       "workerModule": "beeps.js",
@@ -89,6 +102,15 @@ The options are:
 
  * `clients`: A socket connection is initiated to the `flood` service on each
    host in the list to run the test.
+
+ * `clientPort`: The port to use for client connections.
+
+ * `dependencies`: An array of packages to be installed locally by npm before
+   running the test.
+
+ * `privateKeyFile`: A private key file used to generate a digital signature
+   of the the test file. Verification of the signature by the `flood` service
+   prevents execution of malicious scripts.
 
  * `snapshots`: Number of counter snapshots to gather for the test.
    Corresponds to the `X-Snapshots` header to the `flood` service.
