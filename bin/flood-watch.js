@@ -42,7 +42,7 @@ var received = 0;
 function runClient(host) {
   http.request({
     host: host,
-    port: 5143,
+    port: config.clientPort,
     method: 'POST',
     path: '/test/'+path.basename(config.workerModule),
     headers: {

@@ -41,7 +41,6 @@ cluster.setupMaster({
 
 var pubkeyFile = config.publicKeyFile;
 var pubkey = fs.readFileSync(pubkeyFile);
-var signalg = config.signatureAlgorithm;
 
 var urlPrefix = config.urlPrefix;
 
@@ -113,7 +112,7 @@ http.createServer(function (req, res) {
     return;
   }
   var fileParts = [];
-  var verifier = crypto.createVerify(signalg);
+  var verifier = crypto.createVerify('RSA-SHA256');
   req.on('data', function (buf) {
     verifier.update(buf);
     fileParts.push(buf);
