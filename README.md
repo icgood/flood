@@ -127,3 +127,13 @@ The options are:
    while zero and negatives will subtract from the number of CPU cores.
    Corresponds to the `X-Workers` header.
 
+### Public and Private Keys
+
+To streamline the process of generating private and public keys for digital
+content signatures, flood installs a script called `flood-genkeys`. This
+script will generate `private.pem` and `public.pem` in the directory
+specified by the first given argument (defaults to `/etc/flood`).
+
+Don't forget the private key only needs to be accessible by the machine
+running `flood-watch`, and the public key only needs to be accessible by the
+machines running `flood`.
