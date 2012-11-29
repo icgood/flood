@@ -29,6 +29,7 @@ jobs and wait for completion. Here is an example in curl:
 
     curl -i -X POST \
         -H 'Content-Type: text/javascript' \
+        -H 'X-Signature: XXXXXXXXXXXX' \
         -d @mytest.js \
         http://localhost:5143/test/mytest.js
 
