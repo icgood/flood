@@ -43,7 +43,7 @@ indefinitely, incrementing counters.
     exports.run = function (counters) {
       function beep() {
         counters.counterInc('beeps');
-        process.nextTick(beep);
+        setImmediate(beep);
       }
       beep();
     };
@@ -63,7 +63,7 @@ Additional arguments passed to `callback` will be given to `exports.run`:
     exports.run = function (counters, beepsData) {
       function beep() {
         counters.counterInc('beeps');
-        process.nextTick(beep);
+        setImmediate(beep);
       }
       beep();
     };
@@ -91,6 +91,7 @@ something like this:
       "clients": [
         "localhost"
       ],
+      "clientPort": 5143,
       "dependencies": [],
       "privateKeyFile": "/etc/flood/private.pem",
       "snapshots": 10,

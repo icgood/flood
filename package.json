@@ -12,6 +12,9 @@
     "type": "git",
     "url": "https://github.com/icgood/flood.git"
   },
+  "dependencies" : {
+    "npm": "*"
+  },
   "files": {
     "flood-config": "etc/flood.conf.json"
   },
