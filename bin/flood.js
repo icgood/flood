@@ -94,7 +94,7 @@ function startTest(options, res) {
   });
 }
 
-http.createServer(function (req, res) {
+var server = http.createServer(function (req, res) {
   if (req.method !== 'POST') {
     res.writeHead(404);
     res.end();
@@ -137,6 +137,9 @@ http.createServer(function (req, res) {
       startTest(options, res);
     });
   });
-}).listen(config.clientPort);
+});
+server.setTimeout(0);
+
+server.listen(config.clientPort);
 
 // vim:ft=javascript:et:sw=2:ts=2:sts=2:
