@@ -15,9 +15,10 @@
   "dependencies" : {
     "npm": "*"
   },
-  "files": {
-    "flood-config": "etc/flood.conf.json"
-  },
+  "files": [
+    "bin/",
+    "etc/flood.conf.json"
+  ],
   "bin": {
     "flood": "./bin/flood.js",
     "flood-watch": "./bin/flood-watch.js",
