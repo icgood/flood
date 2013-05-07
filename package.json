@@ -16,6 +16,7 @@
     "npm": "*"
   },
   "files": [
+    "lib/",
     "bin/",
     "etc/flood.conf.json"
   ],
@@ -24,6 +25,5 @@
     "flood-watch": "./bin/flood-watch.js",
     "flood-warning": "./bin/flood-warning.js",
     "flood-genkeys": "./bin/flood-genkeys.sh"
-  },
-  "main": "./lib"
+  }
 }
