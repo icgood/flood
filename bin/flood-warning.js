@@ -22,7 +22,8 @@
 
 var fs = require('fs');
 
-var config = JSON.parse(fs.readFileSync(process.argv[2]));
+var configFile = process.argv[2] || 'config.json';
+var config = JSON.parse(fs.readFileSync(configFile));
 
 process.stdin.resume();
 process.stdin.setEncoding('utf8');
