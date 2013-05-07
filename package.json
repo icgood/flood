@@ -2,7 +2,7 @@
   "name": "flood",
   "description": "Generic performance testing tool.",
   "author": "Ian Good <ian.good@rackspace.com>",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "engines": {"node": ">=0.8.0"},
   "engineStrict": true,
   "preferGlobal": "true",
@@ -21,6 +21,7 @@
   "bin": {
     "flood": "./bin/flood.js",
     "flood-watch": "./bin/flood-watch.js",
+    "flood-warning": "./bin/flood-warning.js",
     "flood-genkeys": "./bin/flood-genkeys.sh"
   },
   "main": "./lib"
