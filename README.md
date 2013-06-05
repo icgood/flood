@@ -40,12 +40,30 @@ indefinitely, incrementing counters.
 
     exports.counters = ['beeps'];
 
-    exports.run = function (counters) {
+    exports.run = function (snapshot) {
       function beep() {
-        counters.counterInc('beeps');
+        snapshot.counterInc('beeps');
         setImmediate(beep);
       }
       beep();
+    };
+
+Along with the `counterInc()` function, there is a `counterAdd()` function that
+will produce slightly different behavior but is useful for finding averages of
+arbitrary data produced by your tests, such as the time in milliseconds requests
+take to run.
+
+    exports.counters = ['timers'];
+
+    exports.run = function (snapshot) {
+      function stuff() {
+        var start = getMilliseconds();
+        // do stuff...
+        var end = getMilliseconds();
+        snapshot.counterAdd('timers', (end-start));
+        setImmediate(stuff);
+      }
+      stuff();
     };
 
 Optionally, `exports.setUp` may be a function that initializes the test, before
@@ -60,9 +78,9 @@ Additional arguments passed to `callback` will be given to `exports.run`:
       }
     };
 
-    exports.run = function (counters, beepsData) {
+    exports.run = function (snapshot, beepsData) {
       function beep() {
-        counters.counterInc('beeps');
+        snapshot.counterInc('beeps');
         setImmediate(beep);
       }
       beep();

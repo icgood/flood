@@ -77,27 +77,28 @@ FloodWarning.prototype.calculate = function () {
     var records = getCounterRecords(counter, self.snapshots);
     var min_i = 0;
     var max_i = 0;
-    var total = records[0];
+    var counts = records[0][0];
+    var total = records[0][1];
     var i;
     for (i=1; i<records.length; i++) {
-      total += records[i];
-      if (records[i] > records[max_i]) {
+      counts += records[i][0];
+      total += records[i][1];
+      if (records[i][1] > records[max_i][1]) {
         max_i = i;
       }
-      if (records[i] < records[min_i]) {
+      if (records[i][1] < records[min_i][1]) {
         min_i = i;
       }
     }
-    var totalNoOutliers = total - records[min_i] - records[max_i];
-    if (totalNoOutliers > 0 && records.length >= 10) {
-      self.averages[counter] = Math.floor(Math.round(
-            totalNoOutliers/(records.length - 2)));
-    }
-    else {
+
+    if (counts === 0) {
       self.averages[counter] = Math.floor(Math.round(total/records.length));
     }
-    self.minimums[counter] = Math.floor(records[min_i]);
-    self.maximums[counter] = Math.floor(records[max_i]);
+    else {
+      self.averages[counter] = Math.floor(Math.round(total/counts));
+    }
+    self.minimums[counter] = Math.floor(records[min_i][1]);
+    self.maximums[counter] = Math.floor(records[max_i][1]);
     self.totals[counter] = Math.floor(total);
   });
 };
