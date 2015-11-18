@@ -37,6 +37,15 @@ var signer = crypto.createSign('RSA-SHA256');
 signer.update(code);
 var signature = signer.sign(privkey, 'base64');
 
+config.env = config.env || {};
+for (var name in process.env) {
+  if (process.env.hasOwnProperty(name)) {
+    if (name.slice(0, 6) === 'FLOOD_') {
+      config.env[name.slice(6)] = process.env[name];
+    }
+  }
+}
+
 var total = new snapshots.Snapshots();
 var received = 0;
 function runClient(host) {
@@ -53,6 +62,7 @@ function runClient(host) {
       'X-Snapshot-Length': config.interval,
       'X-Workers': config.numWorkers,
       'X-Dependencies': JSON.stringify(config.dependencies || null),
+      'X-Env': JSON.stringify(config.env),
     },
   }, function (res) {
     if (res.statusCode === 200) {

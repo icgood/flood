@@ -72,7 +72,7 @@ function startTest(options, res) {
   var running = options.workers;
   var workers = new Array(options.workers);
   for (i=0; i<options.workers; i++) {
-    workers[i] = cluster.fork();
+    workers[i] = cluster.fork(options.env);
     workers[i].send(options)
     workers[i].on('message', function (msg) {
       var workerSnapshots = snapshots.fromJSON(msg);
@@ -130,6 +130,7 @@ var server = http.createServer(function (req, res) {
       snapshotLength: req.headers['x-snapshot-length'] || 1000,
       workers: numWorkers > 0 ? numWorkers : os.cpus().length + numWorkers,
       file: fileParts.join(''),
+      env: JSON.parse(req.headers['x-env'] || null),
     };
 
     var deps = JSON.parse(req.headers['x-dependencies'] || null);
