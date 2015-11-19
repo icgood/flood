@@ -20,9 +20,17 @@
 // THE SOFTWARE.
 //
 
-var fs = require('fs');
+var fs = require('fs'),
+    argv = require('minimist')(process.argv.slice(2));
 
-var configFile = process.argv[2] || 'config.json';
+if (argv.help) {
+  console.log('usage: '+process.argv.slice(0, 2).join(' ')+' [options]');
+  console.log('  --help        Display this help.');
+  console.log('  --plot        Only produce the named plot data');
+  process.exit(0);
+}
+
+var configFile = argv._[0] || 'config.json';
 var config = JSON.parse(fs.readFileSync(configFile));
 
 process.stdin.resume();
@@ -167,23 +175,32 @@ FloodWarning.prototype.checkConditions = function () {
 
 FloodWarning.prototype.producePlotData = function () {
   var self = this;
-  if (config.plot) {
-    var names = [];
-    var values = [];
-    var name;
-    for (name in config.plot) {
-      if (config.plot.hasOwnProperty(name)) {
-        var parts = config.plot[name].split(' ', 2);
-        if (parts.length !== 2) {
-          throw 'Invalid Plot';
+  var plots = config.plots || [];
+  var plotName;
+  for (plotName in config.plots) {
+    if (config.plots.hasOwnProperty(plotName)) {
+      var makePlot = (!argv.plot || argv.plot.indexOf(plotName) >= 0);
+      var plot = config.plots[plotName];
+      if (makePlot) {
+        var names = [];
+        var values = [];
+        var name;
+        for (name in plot) {
+          if (plot.hasOwnProperty(name)) {
+            var parts = plot[name].split(' ', 2);
+            if (parts.length !== 2) {
+              throw 'Invalid Plot';
+            }
+            names.push(name);
+            values.push(self.getData(parts[0], parts[1]).toString());
+          }
         }
-        names.push(name);
-        values.push(self.getData(parts[0], parts[1]).toString());
+        var output = names.join(',') + '\n' + values.join(',') + '\n';
+        fs.writeFileSync(plotName+'.csv', output);
+        console.log('Wrote plot data: '+plotName+'.csv');
       }
     }
   }
-  process.stdout.write(names.join(',')+'\n');
-  process.stdout.write(values.join(',')+'\n');
 };
 
 // vim:ft=javascript:et:sw=2:ts=2:sts=2:

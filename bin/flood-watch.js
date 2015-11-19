@@ -23,11 +23,20 @@
 var http = require('http'),
     crypto = require('crypto'),
     fs = require('fs'),
-    path = require('path');
+    path = require('path'),
+    argv = require('minimist')(process.argv.slice(2));
+
+if (argv.help) {
+  console.log('usage: '+process.argv.slice(0, 2).join(' ')+
+      ' [options] [<config>]');
+  console.log('  --help        Display this help.');
+  console.log('  --client      Flood client hostname:port');
+  process.exit(0);
+}
 
 var snapshots = require('../lib/snapshots');
 
-var configFile = process.argv[2] || 'config.json';
+var configFile = argv._[0] || 'config.json';
 var config = JSON.parse(fs.readFileSync(configFile));
 
 var code = fs.readFileSync(config.workerModule);
@@ -44,6 +53,12 @@ for (var name in process.env) {
       config.env[name.slice(6)] = process.env[name];
     }
   }
+}
+
+var clients = config.clients;
+if (argv.client) {
+  clients = Array.isArray(argv.client)
+    ? argv.client : [argv.client];
 }
 
 var total = new snapshots.Snapshots();
@@ -91,8 +106,8 @@ function runClient(host) {
 }
 
 var i;
-for (i=0; i<config.clients.length; i++) {
-  runClient(config.clients[i]);
+for (i=0; i<clients.length; i++) {
+  runClient(clients[i]);
 }
 
 // vim:et:sw=2:ts=2:sts=2:
