@@ -1,8 +1,8 @@
 {
   "name": "flood",
   "description": "Generic performance testing tool.",
-  "author": "Ian Good <ian.good@rackspace.com>",
-  "version": "0.5.0",
+  "author": "Ian Good <icgood@gmail.com>",
+  "version": "0.6.0",
   "engines": {"node": ">=0.8.0"},
   "engineStrict": true,
   "preferGlobal": "true",
@@ -13,12 +13,12 @@
     "url": "https://github.com/icgood/flood.git"
   },
   "dependencies" : {
+    "minimist": "*",
     "npm": "*"
   },
   "files": [
     "lib/",
-    "bin/",
-    "etc/flood.conf.json"
+    "bin/"
   ],
   "bin": {
     "flood": "./bin/flood.js",

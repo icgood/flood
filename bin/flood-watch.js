@@ -49,11 +49,17 @@ for (var name in process.env) {
 var total = new snapshots.Snapshots();
 var received = 0;
 function runClient(host) {
+  var hostParts = host.split(':'),
+      port = 5143;
+  if (hostParts.length > 1) {
+    host = hostParts.slice(0, -1).join(':');
+    port = hostParts[hostParts.length-1];
+  }
   http.request({
     host: host,
-    port: config.clientPort,
+    port: port,
     method: 'POST',
-    path: '/test/'+path.basename(config.workerModule),
+    path: '/flood/'+path.basename(config.workerModule),
     headers: {
       'Content-Length': code.length,
       'Content-Type': 'text/javascript',

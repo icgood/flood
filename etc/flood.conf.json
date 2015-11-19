@@ -1,5 +1,0 @@
-{
-  "clientPort": 5143,
-  "urlPrefix": "/test",
-  "publicKeyFile": "/etc/flood/public.pem"
-}

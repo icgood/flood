@@ -28,21 +28,27 @@ var cluster = require('cluster'),
     fs = require('fs'),
     http = require('http'),
     url = require('url'),
-    path = require('path');
+    path = require('path'),
+    argv = require('minimist')(process.argv.slice(2));
+
+if (argv.help) {
+  console.log('usage: '+process.argv.slice(0, 2).join(' ')+' [options]');
+  console.log('  --help        Display this help.');
+  console.log('  --port        Run on a custom port, default 5143');
+  console.log('  --public-key  Path to the public key,');
+  console.log('                    default /etc/flood/public.pem');
+  process.exit(0);
+}
 
 var snapshots = require('../lib/snapshots');
-
-var configFile = process.argv[2] || __dirname+'/../etc/flood.conf.json';
-var config = JSON.parse(fs.readFileSync(configFile));
 
 cluster.setupMaster({
   exec: __dirname+'/../lib/worker.js',
 });
 
-var pubkeyFile = config.publicKeyFile;
-var pubkey = fs.readFileSync(pubkeyFile);
+var pubkeyFile = argv.pubkey || '/etc/flood/public.pem',
+    pubkey = fs.readFileSync(pubkeyFile);
 
-var urlPrefix = config.urlPrefix;
 
 function killAll(workers) {
   var i;
@@ -106,7 +112,7 @@ var server = http.createServer(function (req, res) {
     return;
   }
   var urlpath = url.parse(req.url).pathname;
-  if (path.dirname(urlpath) !== urlPrefix) {
+  if (path.dirname(urlpath) !== '/flood') {
     res.writeHead(404);
     res.end();
     return;
@@ -141,6 +147,6 @@ var server = http.createServer(function (req, res) {
 });
 server.setTimeout(0);
 
-server.listen(config.clientPort);
+server.listen(argv.port || 5143);
 
 // vim:ft=javascript:et:sw=2:ts=2:sts=2:
