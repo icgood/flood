@@ -46,7 +46,7 @@ cluster.setupMaster({
   exec: __dirname+'/../lib/worker.js',
 });
 
-var pubkeyFile = argv.pubkey || '/etc/flood/public.pem',
+var pubkeyFile = argv['public-key'] || '/etc/flood/public.pem',
     pubkey = fs.readFileSync(pubkeyFile);
 
 

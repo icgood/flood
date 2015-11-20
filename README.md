@@ -100,7 +100,6 @@ something like this:
         "localhost:5143"
       ],
       "dependencies": [],
-      "privateKeyFile": "/etc/flood/private.pem",
       "snapshots": 10,
       "interval": 1000,
       "workerModule": "beeps.js",
@@ -114,10 +113,6 @@ The options are:
 
  * `dependencies`: An array of packages to be installed locally by npm before
    running the test.
-
- * `privateKeyFile`: A private key file used to generate a digital signature
-   of the the test file. Verification of the signature by the `flood` service
-   prevents execution of malicious scripts.
 
  * `snapshots`: Number of counter snapshots to gather for the test.
    Corresponds to the `X-Snapshots` header to the `flood` service.
@@ -133,6 +128,8 @@ The options are:
    the `flood` service. Positive numbers indicate an exact number of threads,
    while zero and negatives will subtract from the number of CPU cores.
    Corresponds to the `X-Workers` header.
+
+See `flood-watch --help` for command-line options.
 
 ### Public and Private Keys
 

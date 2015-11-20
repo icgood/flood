@@ -29,8 +29,10 @@ var http = require('http'),
 if (argv.help) {
   console.log('usage: '+process.argv.slice(0, 2).join(' ')+
       ' [options] [<config>]');
-  console.log('  --help        Display this help.');
-  console.log('  --client      Flood client hostname:port');
+  console.log('  --help         Display this help.');
+  console.log('  --client       Flood client hostname:port');
+  console.log('  --private-key  Path to the private key,');
+  console.log('                    default /etc/flood/private.pem');
   process.exit(0);
 }
 
@@ -40,7 +42,8 @@ var configFile = argv._[0] || 'config.json';
 var config = JSON.parse(fs.readFileSync(configFile));
 
 var code = fs.readFileSync(config.workerModule);
-var privkey = fs.readFileSync(config.privateKeyFile);
+var privkeyFile = argv['private-key'] || '/etc/flood/private.pem',
+    privkey = fs.readFileSync(privkeyFile);
 
 var signer = crypto.createSign('RSA-SHA256');
 signer.update(code);
