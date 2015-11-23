@@ -37,8 +37,8 @@ process.stdin.on('end', function () {
   var data = JSON.parse(parts.join(''));
   var fw = new FloodWarning(data.snapshots);
   fw.calculate();
-  fw.checkConditions();
   fw.producePlotData();
+  fw.checkConditions();
 });
 
 function FloodWarning(snapshots) {
